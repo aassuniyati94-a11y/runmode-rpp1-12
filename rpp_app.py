@@ -53,6 +53,38 @@ DATA_TINGKATAN = {
     "Kelas XII (12) - SMA [Fase F]": {"jenjang": "SMA", "fase": "Fase F"},
 }
 
+# --- OPSI PILIHAN STRATEGI & ASESMEN (BIAR TINGGAL KLIK) ---
+LIST_MODEL = [
+    "Problem Based Learning (PBL)",
+    "Project Based Learning (PjBL)",
+    "Discovery Learning",
+    "Inquiry Learning",
+    "Cooperative Learning",
+    "Direct Instruction (Pembelajaran Langsung)",
+    "Lainnya (Ketik Manual)"
+]
+
+LIST_METODE = [
+    "Diskusi Kelompok", "Tanya Jawab", "Presentasi", "Ceramah Interaktif",
+    "Demonstrasi", "Eksperimen / Percobaan", "Games / Permainan Edukatif",
+    "Studi Kasus", "Simulasi"
+]
+
+LIST_MEDIA = [
+    "LKPD (Lembar Kerja Peserta Didik)", "Laptop & Proyektor (Slide Presentasi)",
+    "Video Pembelajaran", "Buku Teks Siswa / Modul Cetak", "Alat Peraga Konkrit",
+    "Gambar / Kartu Informasi", "Internet / Google Form / Quizizz"
+]
+
+LIST_ASESMEN = [
+    "Formatif: Observasi Sikap (Profil Pelajar Pancasila)",
+    "Formatif: Performa / Kinerja / Hasil LKPD Kelompok",
+    "Formatif: Tanya Jawab / Kuis Lisan",
+    "Sumatif: Tes Tertulis (Pilihan Ganda / Esai)",
+    "Sumatif: Penilaian Produk / Proyek Akhir"
+]
+
+
 # --- 4. FORM INTERFACE GENERATION ---
 st.subheader("📋 Identitas Sekolah & Kurikulum")
 col1, col2 = st.columns(2)
@@ -74,15 +106,31 @@ st.subheader("🎯 Capaian & Tujuan")
 cp = st.text_area("Capaian Pembelajaran (CP)")
 atp = st.text_area("Tujuan Pembelajaran (TP)")
 
-# --- FORM STRATEGI, MODEL, METODE, MEDIA & PENILAIAN ---
+
+# --- FORM STRATEGI, MODEL, METODE, MEDIA & PENILAIAN (VERSI PRAKTIS) ---
 st.subheader("🛠️ Strategi & Asesmen Pembelajaran")
 col5, col6 = st.columns(2)
 with col5:
-    model_pembelajaran = st.text_input("Model Pembelajaran", placeholder="Contoh: Problem Based Learning (PBL)")
-    metode_pembelajaran = st.text_input("Metode Pembelajaran", placeholder="Contoh: Diskusi kelompok, Tanya Jawab")
+    # Model Pembelajaran (Selectbox + Manual input jika pilih Lainnya)
+    pilih_model = st.selectbox("Model Pembelajaran", LIST_MODEL)
+    if pilih_model == "Lainnya (Ketik Manual)":
+        model_pembelajaran = st.text_input("Ketik Model Pembelajaran Manual:", placeholder="Masukkan model pembelajaran Anda...")
+    else:
+        model_pembelajaran = pilih_model
+        
+    # Metode Pembelajaran (Multiselect: Bisa pilih lebih dari satu)
+    pilih_metode = st.multiselect("Metode Pembelajaran (Bisa pilih beberapa)", LIST_METODE, default=["Diskusi Kelompok", "Tanya Jawab"])
+    metode_pembelajaran = ", ".join(pilih_metode)
+
 with col6:
-    bahan_ajar = st.text_area("Bahan Ajar & Media", placeholder="Contoh: LKPD Kelompok, Laptop, Proyektor")
-    penilaian_asesmen = st.text_area("Jenis & Bentuk Penilaian", placeholder="Contoh: Formatif (Observasi sikap & LKPD)")
+    # Bahan Ajar & Media (Multiselect: Bisa pilih beberapa)
+    pilih_media = st.multiselect("Bahan Ajar & Media (Bisa pilih beberapa)", LIST_MEDIA, default=["LKPD (Lembar Kerja Peserta Didik)", "Laptop & Proyektor (Slide Presentasi)"])
+    bahan_ajar = ", ".join(pilih_media)
+    
+    # Jenis & Bentuk Penilaian (Multiselect: Bisa pilih beberapa)
+    pilih_asesmen = st.multiselect("Jenis & Bentuk Penilaian (Bisa pilih beberapa)", LIST_ASESMEN, default=["Formatif: Observasi Sikap (Profil Pelajar Pancasila)", "Formatif: Performa / Kinerja / Hasil LKPD Kelompok"])
+    penilaian_asesmen = "; ".join(pilih_asesmen)
+
 
 st.subheader("✍️ Otentikasi & Tanda Tangan")
 col3, col4 = st.columns(2)
@@ -91,7 +139,7 @@ with col3:
     nip_kasek = st.text_input("NIP Kepala Sekolah", value=DEFAULT_NIP_KASEK)
 with col4:
     nama_guru = st.text_input("Nama Guru Mata Pelajaran", value=DEFAULT_GURU)
-    nip_guru = st.text_input("NIP Guru Mata Pelajaran", value=DEFAULT_GURU)
+    nip_guru = st.text_input("NIP Guru Mata Pelajaran", value=DEFAULT_NIP_GURU)
 
 
 # --- FUNGSI PEMBUAT WORD (BERSIH BINTANG + TANDA TANGAN BERSEBELAHAN) ---
