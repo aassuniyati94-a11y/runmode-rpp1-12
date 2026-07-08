@@ -53,7 +53,6 @@ DATA_TINGKATAN = {
     "Kelas XII (12) - SMA [Fase F]": {"jenjang": "SMA", "fase": "Fase F"},
 }
 
-# --- OPSI PILIHAN STRATEGI & ASESMEN (BIAR TINGGAL KLIK) ---
 LIST_MODEL = [
     "Problem Based Learning (PBL)",
     "Project Based Learning (PjBL)",
@@ -79,8 +78,8 @@ LIST_MEDIA = [
 LIST_ASESMEN = [
     "Formatif: Observasi Sikap (Profil Pelajar Pancasila)",
     "Formatif: Performa / Kinerja / Hasil LKPD Kelompok",
-    "Formatif: Tanya Jawab / Kuis Lisan",
-    "Sumatif: Tes Tertulis (Pilihan Ganda / Esai)",
+    "Formatif: Tanya Jawab / Kuis Lisan / Isian Singkat (Short Answer)",
+    "Sumatif: Tes Tertulis (Pilihan Ganda & Esai)",
     "Sumatif: Penilaian Produk / Proyek Akhir"
 ]
 
@@ -107,28 +106,23 @@ cp = st.text_area("Capaian Pembelajaran (CP)")
 atp = st.text_area("Tujuan Pembelajaran (TP)")
 
 
-# --- FORM STRATEGI, MODEL, METODE, MEDIA & PENILAIAN (VERSI PRAKTIS) ---
 st.subheader("🛠️ Strategi & Asesmen Pembelajaran")
 col5, col6 = st.columns(2)
 with col5:
-    # Model Pembelajaran (Selectbox + Manual input jika pilih Lainnya)
     pilih_model = st.selectbox("Model Pembelajaran", LIST_MODEL)
     if pilih_model == "Lainnya (Ketik Manual)":
         model_pembelajaran = st.text_input("Ketik Model Pembelajaran Manual:", placeholder="Masukkan model pembelajaran Anda...")
     else:
         model_pembelajaran = pilih_model
         
-    # Metode Pembelajaran (Multiselect: Bisa pilih lebih dari satu)
     pilih_metode = st.multiselect("Metode Pembelajaran (Bisa pilih beberapa)", LIST_METODE, default=["Diskusi Kelompok", "Tanya Jawab"])
     metode_pembelajaran = ", ".join(pilih_metode)
 
 with col6:
-    # Bahan Ajar & Media (Multiselect: Bisa pilih beberapa)
     pilih_media = st.multiselect("Bahan Ajar & Media (Bisa pilih beberapa)", LIST_MEDIA, default=["LKPD (Lembar Kerja Peserta Didik)", "Laptop & Proyektor (Slide Presentasi)"])
     bahan_ajar = ", ".join(pilih_media)
     
-    # Jenis & Bentuk Penilaian (Multiselect: Bisa pilih beberapa)
-    pilih_asesmen = st.multiselect("Jenis & Bentuk Penilaian (Bisa pilih beberapa)", LIST_ASESMEN, default=["Formatif: Observasi Sikap (Profil Pelajar Pancasila)", "Formatif: Performa / Kinerja / Hasil LKPD Kelompok"])
+    pilih_asesmen = st.multiselect("Jenis & Bentuk Penilaian (Bisa pilih beberapa)", LIST_ASESMEN, default=["Formatif: Observasi Sikap (Profil Pelajar Pancasila)", "Sumatif: Tes Tertulis (Pilihan Ganda & Esai)"])
     penilaian_asesmen = "; ".join(pilih_asesmen)
 
 
@@ -142,7 +136,7 @@ with col4:
     nip_guru = st.text_input("NIP Guru Mata Pelajaran", value=DEFAULT_NIP_GURU)
 
 
-# --- FUNGSI PEMBUAT WORD (BERSIH BINTANG + TANDA TANGAN BERSEBELAHAN) ---
+# --- FUNGSI PEMBUAT WORD (BERSIH BINTANG + TABEL TTD BERSEBELAHAN) ---
 def buat_file_word(teks_rpp, nama_kasek, nip_kasek, nama_guru, nip_guru, tanggal, nama_sekolah):
     doc = Document()
     doc.add_heading('RENCANA PELAKSANAAN PEMBELAJARAN (RPP) / MODUL AJAR', level=1)
@@ -155,7 +149,6 @@ def buat_file_word(teks_rpp, nama_kasek, nip_kasek, nama_guru, nip_guru, tanggal
             continue
         isi_utama.append(baris)
 
-    # Cetak isi konten utama
     for baris in isi_utama:
         p = doc.add_paragraph()
         bagian = baris.split('**')
@@ -166,25 +159,21 @@ def buat_file_word(teks_rpp, nama_kasek, nip_kasek, nama_guru, nip_guru, tanggal
                 teks_whitespace = teks.replace('*', '')
                 p.add_run(teks_whitespace)
                 
-    doc.add_paragraph() # Jarak sebelum tabel tanda tangan
+    doc.add_paragraph() 
     
-    # Membuat tabel untuk tanda tangan bersebelahan (1 baris, 2 kolom)
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
     
-    # Hilangkan border tabel agar bersih seperti kertas polos
     tblPr = table._tbl.tblPr
     tblBorders = parse_xml(r'<w:tblBorders %s><w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/><w:insideH w:val="none"/><w:insideV w:val="none"/></w:tblBorders>' % nsdecls('w'))
     tblPr.append(tblBorders)
     
-    # Kolom Kiri: Kepala Sekolah
     cell_kiri = table.rows[0].cells[0]
     p_kiri = cell_kiri.paragraphs[0]
     p_kiri.add_run(f"Mengetahui,\nKepala {nama_sekolah}\n\n\n\n").bold = False
     p_kiri.add_run(f"{nama_kasek}\n").bold = True
     p_kiri.add_run(f"NIP. {nip_kasek}")
     
-    # Kolom Kanan: Guru Mata Pelajaran
     cell_kanan = table.rows[0].cells[1]
     p_kanan = cell_kanan.paragraphs[0]
     p_kanan.add_run(f", {tanggal}\nGuru Mata Pelajaran\n\n\n\n").bold = False
@@ -206,12 +195,9 @@ if st.button("Susun RPP & Siapkan File Word"):
     else:
         with st.spinner(f"Gemini AI sedang memproses data untuk {pilihan_tingkat}..."):
             try:
-                # Inisialisasi Client google-genai
                 fresh_client = genai.Client(api_key=api_key_input.strip())
-                
                 tanggal_sekarang = datetime.now().strftime("%d %B %Y")
                 
-                # Instruksi ketat struktur dengan optimasi "Tujuan Pembelajaran berbobot"
                 prompt_instruksi = f"""
                 Anda adalah pakar Kurikulum Merdeka tingkat {jenjang_pendidikan} ({fase_kurikulum}).
                 Buatlah Modul Ajar/RPP yang praktis dan langsung pakai untuk kelas {pilihan_tingkat} di Sekolah {nama_sekolah}.
@@ -225,29 +211,29 @@ if st.button("Susun RPP & Siapkan File Word"):
                 - Capaian Pembelajaran (CP): {cp}
                 - Input Kompetensi: {atp}
                 
-                STRATEGI & ASESMEN:
+                STRATEGI & ASESMEN YANG DIPILIH PENGGUNA:
                 - Model Pembelajaran: {model_pembelajaran if model_pembelajaran else 'Sesuaikan yang relevan'}
                 - Metode Pembelajaran: {metode_pembelajaran if metode_pembelajaran else 'Sesuaikan yang relevan'}
                 - Bahan Ajar & Media: {bahan_ajar if bahan_ajar else 'Sesuaikan yang relevan'}
                 - Penilaian / Asesmen: {penilaian_asesmen if penilaian_asesmen else 'Sesuaikan yang relevan'}
 
                 ATURAN STRUKTUR MODUL AJAR (WAJIB DIPATUHI SECARA KETAT):
-                1. Pada bagian "**IDENTITAS MODUL**", HILANGKAN dan JANGAN CETAK baris informasi berikut:
-                   - Nama Penulis
-                   - Jenjang Sekolah
-                   - Tahun Pelajaran / Tahun Ajaran
-                   Cukup tampilkan komponen: Instansi, Kelas, Mata Pelajaran, Materi Pokok, Elemen, dan Alokasi Waktu.
-                2. Buatlah bagian bernama "**Tujuan Pembelajaran**". Di dalam bagian ini, jabarkan input kompetensi menjadi poin-poin tujuan yang operasional, detail, terukur, dan mendalam (gaya penulisan Indikator Ketercapaian/IKTP), TETAPI label judulnya harus TETAP ditulis "**Tujuan Pembelajaran**" (Jangan sebut istilah IKTP atau Indikator).
-                3. JANGAN MEMBUAT atau menampilkan bagian-bagian berikut: Target Peserta Didik, Pemahaman Bermakna, dan Pertanyaan Esensial/Pemantik secara terpisah (HILANGKAN TOTAL).
+                1. Pada bagian "**IDENTITAS MODUL**", HILANGKAN dan JANGAN CETAK baris informasi berikut: Nama Penulis, Jenjang Sekolah, Tahun Pelajaran. Cukup tampilkan komponen: Instansi, Kelas, Mata Pelajaran, Materi Pokok, Elemen, dan Alokasi Waktu.
+                2. Buatlah bagian bernama "**Tujuan Pembelajaran**". Di dalam bagian ini, jabarkan input kompetensi menjadi poin-poin tujuan yang operasional, detail, terukur, dan mendalam.
+                3. JANGAN MEMBUAT atau menampilkan bagian-bagian berikut: Target Peserta Didik, Pemahaman Bermakna, dan Pertanyaan Esensial/Pemantik secara terpisah.
                 4. Struktur Kegiatan Pembelajaran hanya boleh terdiri dari:
-                   - **Kegiatan Awal**: Masukkan Pertanyaan Pemantik langsung melebur ke dalam aktivitas awal ini bersama apersepsi dan motivasi (jangan buat sub-judul terpisah).
-                   - **Kegiatan Inti**: Langkah aktivitas belajar siswa. Sematkan penanda Trilogi JMM [Joyful], [Mindful], atau [Meaningful] pada langkah yang sesuai.
-                   - **Kegiatan Akhir**: Integrasikan bagian Refleksi Materi (untuk mengukur esensi materi pelajaran siswa) langsung melebur di sini sebelum kelas selesai.
-                   - **Penutup**: Masukkan Refleksi Pembelajaran / Refleksi Proses (perasaan siswa dan evaluasi cara belajar mereka) langsung melebur ke dalam aktivitas penutup ini.
-                5. Jangan menuliskan teks lembar pengesahan tanda tangan di akhir jawaban teks Anda, karena sistem kode Python akan mencetaknya secara otomatis secara berdampingan.
+                   - **Kegiatan Awal**: Masukkan Pertanyaan Pemantik langsung melebur ke dalam aktivitas awal ini bersama apersepsi dan motivasi.
+                   - **Kegiatan Inti**: Langkah aktivitas belajar siswa. Sematkan penanda Trilogi JMM [Joyful], [Mindful], atau [Meaningful].
+                   - **Kegiatan Akhir**: Integrasikan bagian Refleksi Materi langsung melebur di sini sebelum kelas selesai.
+                   - **Penutup**: Masukkan Refleksi Pembelajaran / Refleksi Proses langsung melebur ke dalam aktivitas penutup ini.
+                5. WAJIB TAMBAHKAN SEBUAH SUB-BAB BESAR DI PALING BAWAH BERNAMA "**LAMPIRAN: INSTRUMEN PENILAIAN & SOAL**". Di dalam lampiran ini, buatlah instrumen nyata berbasis teks/tabel berdasarkan jenis pilihan asesmen yang dipilih oleh pengguna:
+                   - Jika ada pilihan "Pilihan Ganda & Esai", buatkan minimal 5 butir soal pilihan ganda nyata (opsi A-D untuk SD, atau A-E untuk SMP/SMA) DAN 3 soal esai terbuka beserta Kunci Jawabannya.
+                   - Jika ada pilihan "Tanya Jawab / Kuis Lisan / Isian Singkat (Short Answer)", buatkan minimal 5 daftar pertanyaan isian singkat / kuis lisan nyata beserta Kunci Jawabannya.
+                   - Jika ada pilihan "Observasi Sikap", buatkan format draf tabel instrumen pengamatan sikap Profil Pelajar Pancasila beserta indikator perilakunya.
+                   - Jika ada pilihan "Performa / Kinerja" atau "Produk / Proyek Akhir", buatkan draf rubrik penilaian kinerja/proyek yang rinci dengan kriteria penilaian dan skala skor (1-4).
+                6. Jangan menuliskan teks lembar pengesahan tanda tangan di akhir jawaban teks Anda, karena sistem kode Python akan mencetaknya secara otomatis secara berdampingan.
                 """
                 
-                # Memanggil model gemini-2.5-flash
                 response = fresh_client.models.generate_content(
                     model='gemini-2.5-flash', 
                     contents=prompt_instruksi
@@ -257,7 +243,6 @@ if st.button("Susun RPP & Siapkan File Word"):
                 st.markdown("---")
                 st.markdown(response.text)
                 
-                # Proses convert teks ke Word dengan struktur tanda tangan tabel berdampingan yang bersih
                 file_word = buat_file_word(
                     teks_rpp=response.text,
                     nama_kasek=nama_kasek,
